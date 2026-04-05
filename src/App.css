@@ -1,8 +1,16 @@
+/* Remove the constraints so the app can fill the screen */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left; /* Changed from center to left for better dashboard alignment */
+}
+
+/* Ensure the body itself doesn't have default margins */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f4f1ea; /* Matches your cream UI */
 }
 
 .logo {
