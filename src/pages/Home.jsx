@@ -17,6 +17,7 @@ import RecipeDetails from "./RecipeDetails";
 import { useAuth } from "../context/AuthContext";
 import { RecipeService } from "../api/recipeService";
 import { PantryService } from "../api/pantryService";
+import ChatAssistant from "../components/ChatAssistant";
 
 export default function Home() {
   const { user } = useAuth();
@@ -214,6 +215,7 @@ export default function Home() {
           <About />
         </div>
       </main>
+      <ChatAssistant />
     </div>
   );
 }

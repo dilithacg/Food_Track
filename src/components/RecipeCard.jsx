@@ -25,9 +25,11 @@ export default function RecipeCard({
       </div>
 
       <div className="aspect-4/3 bg-[#fcfaf7] rounded-2xl flex items-center justify-center mb-5 overflow-hidden">
-        <span className="text-6xl group-hover:scale-125 transition-transform duration-500">
-          {image}
-        </span>
+        <img
+          src={image}
+          alt={title}
+          className="text-6xl group-hover:scale-125 transition-transform duration-500"
+        />
       </div>
 
       <div className="space-y-4">

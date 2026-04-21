@@ -1,26 +1,37 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Protected King's territory */}
-          <Route path="/home" element={<Home />} />
-
-          <Route path="/profile" element={<Profile />} />
+          {/* Protected routes */}
+          <Route
+            path="/home"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
