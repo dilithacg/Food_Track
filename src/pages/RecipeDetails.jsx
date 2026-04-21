@@ -1,8 +1,17 @@
-import React from "react";
+import React, { useState } from "react"; // 1. Added useState
 import { ChevronLeft, Clock, Flame, Star, Utensils } from "lucide-react";
+import CookingMode from "../components/CookingMode"; // 2. Import your CookingMode component
 
 export default function RecipeDetails({ recipe, onBack }) {
+  // 3. Create state to track if we are in "Cooking Mode"
+  const [isCooking, setIsCooking] = useState(false);
+
   if (!recipe) return null;
+
+  // 4. Conditional Return: If cooking, show the CookingMode overlay
+  if (isCooking) {
+    return <CookingMode recipe={recipe} onExit={() => setIsCooking(false)} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#f4f1ea] p-6 md:p-12 lg:p-16 animate-in fade-in duration-500">
@@ -18,8 +27,7 @@ export default function RecipeDetails({ recipe, onBack }) {
         <div className="bg-white rounded-[3.5rem] overflow-hidden shadow-2xl border border-gray-100">
           {/* HERO IMAGE SECTION */}
           <div className="relative h-64 md:h-96 bg-green-50 flex items-center justify-center text-8xl md:text-9xl">
-            {recipe.image}{" "}
-            {/* This handles the emoji from your RECIPES array */}
+            {recipe.image}
             <div className="absolute top-6 right-6 bg-white/90 backdrop-blur px-4 py-2 rounded-2xl flex items-center gap-2 shadow-sm">
               <Star className="text-yellow-500 fill-yellow-500" size={18} />
               <span className="font-black text-gray-800">{recipe.rating}</span>
@@ -41,7 +49,11 @@ export default function RecipeDetails({ recipe, onBack }) {
                 </span>
               </div>
               <div
-                className={`px-4 py-2 rounded-xl font-bold ${recipe.isVeg ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                className={`px-4 py-2 rounded-xl font-bold ${
+                  recipe.isVeg
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}
               >
                 {recipe.isVeg ? "Vegetarian" : "Non-Veg"}
               </div>
@@ -74,7 +86,11 @@ export default function RecipeDetails({ recipe, onBack }) {
               </div>
             </div>
 
-            <button className="w-full mt-12 bg-green-800 text-white py-5 rounded-3xl font-black text-xl shadow-xl shadow-green-900/20 hover:bg-green-900 active:scale-[0.98] transition-all">
+            {/* 5. Trigger the state change on click */}
+            <button
+              onClick={() => setIsCooking(true)}
+              className="w-full mt-12 bg-green-800 text-white py-5 rounded-3xl font-black text-xl shadow-xl shadow-green-900/20 hover:bg-green-900 active:scale-[0.98] transition-all"
+            >
               Start Cooking Now
             </button>
           </div>

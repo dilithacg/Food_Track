@@ -1,46 +1,50 @@
 import React, { useState, useEffect } from "react";
-import {
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Timer,
-  CheckCircle,
-  RotateCcw,
-  Volume2,
-} from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Timer, CheckCircle } from "lucide-react";
 
 export default function CookingMode({ recipe, onExit }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [timeLeft, setTimeLeft] = useState(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  const steps = recipe.steps || [
-    "Prepare all ingredients and wash vegetables.",
-    "Heat oil in a large pan over medium heat.",
-    "Add onions and ginger-garlic paste; sauté until golden.",
-    "Incorporate the main protein and spices.",
-    "Simmer for 10 minutes until the aroma fills the room.",
-    "Garnish with fresh herbs and serve hot.",
-  ];
+  // 1. REMOVED DUMMY DATA: Now using the steps array from Firestore
+  // Fallback to empty array to prevent "undefined" errors
+  const steps = recipe.steps || [];
 
-  const progress = ((currentStep + 1) / steps.length) * 100;
+  const progress =
+    steps.length > 0 ? ((currentStep + 1) / steps.length) * 100 : 0;
 
-  // Simple Timer Logic
+  // 2. HELPER: Extract minutes from the text (e.g., "Boil for 10 minutes" -> 10)
+  const getStepTime = (text) => {
+    const match = text.match(/(\d+)\s*minute/i);
+    return match ? parseInt(match[1]) * 60 : 600; // default to 10m if not found
+  };
+
   useEffect(() => {
     let interval;
     if (isTimerRunning && timeLeft > 0) {
       interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
     } else if (timeLeft === 0) {
       setIsTimerRunning(false);
-      alert("Step Complete!");
+      // Optional: Add a sound notification here
+      alert("Time is up!");
     }
     return () => clearInterval(interval);
   }, [isTimerRunning, timeLeft]);
 
-  const startTimer = (seconds) => {
+  const startTimer = () => {
+    const seconds = getStepTime(steps[currentStep]);
     setTimeLeft(seconds);
     setIsTimerRunning(true);
   };
+
+  // Safety check if steps haven't loaded yet
+  if (steps.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-white z-[100] flex items-center justify-center">
+        <p className="font-bold text-gray-400">Loading recipe steps...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-white z-[100] flex flex-col font-sans antialiased">
@@ -85,7 +89,7 @@ export default function CookingMode({ recipe, onExit }) {
             {steps[currentStep]}
           </h1>
 
-          {/* DYNAMIC TIMER (Visible if step mentions time) */}
+          {/* DYNAMIC TIMER */}
           {steps[currentStep].toLowerCase().includes("minute") && (
             <div className="mt-12 p-8 bg-[#fcfaf7] rounded-[3rem] border-2 border-dashed border-green-200 flex flex-col items-center">
               {timeLeft !== null ? (
@@ -99,11 +103,13 @@ export default function CookingMode({ recipe, onExit }) {
 
               <button
                 onClick={() =>
-                  isTimerRunning ? setIsTimerRunning(false) : startTimer(600)
+                  isTimerRunning ? setIsTimerRunning(false) : startTimer()
                 }
-                className="bg-green-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-green-700 transition-all"
+                className="bg-green-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-green-700 transition-all shadow-lg"
               >
-                {isTimerRunning ? "Pause Timer" : "Start 10m Timer"}
+                {isTimerRunning
+                  ? "Pause Timer"
+                  : `Start ${getStepTime(steps[currentStep]) / 60}m Timer`}
               </button>
             </div>
           )}
@@ -115,7 +121,11 @@ export default function CookingMode({ recipe, onExit }) {
         <div className="max-w-4xl mx-auto flex gap-4">
           <button
             disabled={currentStep === 0}
-            onClick={() => setCurrentStep((prev) => prev - 1)}
+            onClick={() => {
+              setCurrentStep((prev) => prev - 1);
+              setTimeLeft(null);
+              setIsTimerRunning(false);
+            }}
             className="flex-1 flex items-center justify-center gap-2 py-5 bg-gray-100 rounded-[2rem] font-black text-gray-500 disabled:opacity-30 transition-all"
           >
             <ChevronLeft size={24} /> Previous
