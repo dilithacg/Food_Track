@@ -8,30 +8,32 @@ import {
 } from "firebase/firestore";
 
 export const PantryService = {
-  // 1. Real-time Listener for Pantry Items
-  // This "subscribes" to the user's pantry so it updates instantly in the UI
+  // Real-time listener: This updates the 'pantry' state automatically
   subscribeToPantry: (userId, callback) => {
+    if (!userId) return;
     const userDoc = doc(db, "users", userId);
     return onSnapshot(userDoc, (doc) => {
       if (doc.exists()) {
         callback(doc.data().pantry || []);
+      } else {
+        callback([]);
       }
     });
   },
 
-  // 2. Add an ingredient
   addIngredient: async (userId, item) => {
     const userDoc = doc(db, "users", userId);
+    // Standardize to lowercase for better matching logic
+    const formattedItem = item.trim().toLowerCase();
     try {
       await updateDoc(userDoc, {
-        pantry: arrayUnion(item),
+        pantry: arrayUnion(formattedItem),
       });
     } catch (error) {
       console.error("Error adding ingredient:", error);
     }
   },
 
-  // 3. Remove an ingredient
   removeIngredient: async (userId, item) => {
     const userDoc = doc(db, "users", userId);
     try {

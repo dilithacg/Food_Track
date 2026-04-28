@@ -2,6 +2,9 @@ import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AuthService } from "../../api/authService";
+// 1. Import Firestore functions and your db config
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,8 +19,17 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      await AuthService.login(email, password);
-      navigate("/home");
+      // 2. Capture the user object from the login service
+      const user = await AuthService.login(email, password);
+
+      // 3. Check the user's role in Firestore
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+
+      if (userDoc.exists() && userDoc.data().role === "admin") {
+        navigate("/admin"); // Redirect Admins here
+      } else {
+        navigate("/home"); // Redirect regular users here
+      }
     } catch (err) {
       setError("Invalid email or password.");
     } finally {
@@ -27,8 +39,16 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     try {
-      await AuthService.loginWithGoogle();
-      navigate("/home");
+      const user = await AuthService.loginWithGoogle();
+
+      // 4. Same check for Google Login
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+
+      if (userDoc.exists() && userDoc.data().role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/home");
+      }
     } catch (err) {
       setError("Google sign-in failed.");
     }

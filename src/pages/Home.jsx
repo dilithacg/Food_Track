@@ -9,10 +9,9 @@ import {
   Plus,
   X,
   User,
-  Loader2,
 } from "lucide-react";
 import About from "./About";
-import RecipeCard from "../components/RecipeCard";
+import RecommendedRecipe from "../components/RecommendedRecipe"; // New Import
 import RecipeDetails from "./RecipeDetails";
 import { useAuth } from "../context/AuthContext";
 import { RecipeService } from "../api/recipeService";
@@ -34,7 +33,6 @@ export default function Home() {
   useEffect(() => {
     const initHome = async () => {
       try {
-        // Fetch recipes from Firestore
         const recipeData = await RecipeService.getAllRecipes();
         setRecipes(recipeData);
       } catch (err) {
@@ -63,7 +61,8 @@ export default function Home() {
   const handleAddIngredient = async (e) => {
     e.preventDefault();
     if (!newItem.trim() || !user) return;
-    await PantryService.addIngredient(user.uid, newItem.trim());
+    // Standardize to lowercase for better matching logic
+    await PantryService.addIngredient(user.uid, newItem.trim().toLowerCase());
     setNewItem("");
   };
 
@@ -148,19 +147,25 @@ export default function Home() {
             <div className="flex flex-wrap items-center gap-4">
               <div className="font-black text-gray-800 mr-4">Your Pantry:</div>
 
-              {pantry.map((item) => (
-                <span
-                  key={item}
-                  className="bg-[#fcfaf7] px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-600 flex items-center gap-3 border border-gray-50 hover:border-red-100 transition-all group"
-                >
-                  {item}
-                  <X
-                    size={14}
-                    className="cursor-pointer text-gray-300 group-hover:text-red-500 transition-colors"
-                    onClick={() => handleRemoveIngredient(item)}
-                  />
+              {pantry.length === 0 ? (
+                <span className="text-gray-400 text-sm italic">
+                  Pantry is empty
                 </span>
-              ))}
+              ) : (
+                pantry.map((item) => (
+                  <span
+                    key={item}
+                    className="bg-[#fcfaf7] px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-600 flex items-center gap-3 border border-gray-50 hover:border-red-100 transition-all group"
+                  >
+                    {item}
+                    <X
+                      size={14}
+                      className="cursor-pointer text-gray-300 group-hover:text-red-500 transition-colors"
+                      onClick={() => handleRemoveIngredient(item)}
+                    />
+                  </span>
+                ))
+              )}
 
               <form
                 onSubmit={handleAddIngredient}
@@ -183,34 +188,13 @@ export default function Home() {
             </div>
           </section>
 
-          {/* RECIPE GRID */}
-          <section className="mb-20">
-            <div className="flex justify-between items-end mb-10">
-              <h2 className="text-3xl font-black text-gray-800 tracking-tight">
-                Recommended for you
-              </h2>
-              <span className="text-gray-400 font-bold bg-white px-6 py-2 rounded-full text-sm shadow-sm border border-gray-50">
-                {recipes.length} recipes found
-              </span>
-            </div>
-
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 text-green-800">
-                <Loader2 className="animate-spin mb-4" size={48} />
-                <p className="font-bold">Fetching fresh recipes...</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-                {recipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    {...recipe}
-                    onClick={() => setSelectedRecipe(recipe)}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
+          {/* INTEGRATED RECOMMENDED RECIPES SECTION */}
+          <RecommendedRecipe
+            recipes={recipes}
+            pantry={pantry}
+            loading={loading}
+            onRecipeClick={(recipe) => setSelectedRecipe(recipe)}
+          />
 
           <About />
         </div>
