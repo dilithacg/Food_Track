@@ -9,10 +9,13 @@ import {
   Plus,
   X,
   User,
+  Clock,
 } from "lucide-react";
 import About from "./About";
-import RecommendedRecipe from "../components/RecommendedRecipe"; // New Import
+import RecommendedRecipe from "../components/RecommendedRecipe";
 import RecipeDetails from "./RecipeDetails";
+import AddLeftoverModal from "../components/AddLeftoverModal";
+import NotificationDisplay from "../components/NotificationDisplay";
 import { useAuth } from "../context/AuthContext";
 import { RecipeService } from "../api/recipeService";
 import { PantryService } from "../api/pantryService";
@@ -22,14 +25,22 @@ export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // States
+  // Core States
   const [recipes, setRecipes] = useState([]);
   const [pantry, setPantry] = useState([]);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newItem, setNewItem] = useState("");
 
-  // 1. Fetch Recipes and Sync Pantry on Mount
+  // Leftover States
+  const [isLeftoverModalOpen, setIsLeftoverModalOpen] = useState(false);
+  const [leftovers, setLeftovers] = useState([]);
+
+  // Notification States
+  const [showNotifs, setShowNotifs] = useState(false);
+  const [expiringItems, setExpiringItems] = useState([]);
+
+  // 1. Fetch Recipes and Sync Pantry
   useEffect(() => {
     const initHome = async () => {
       try {
@@ -44,7 +55,6 @@ export default function Home() {
 
     initHome();
 
-    // 2. Real-time Pantry Subscription
     let unsubscribePantry;
     if (user) {
       unsubscribePantry = PantryService.subscribeToPantry(user.uid, (data) => {
@@ -57,11 +67,16 @@ export default function Home() {
     };
   }, [user]);
 
+  // 2. Notification Logic: Monitor leftovers for expiry
+  useEffect(() => {
+    const urgent = leftovers.filter((item) => Number(item.daysLeft) === 1);
+    setExpiringItems(urgent);
+  }, [leftovers]);
+
   // Handlers
   const handleAddIngredient = async (e) => {
     e.preventDefault();
     if (!newItem.trim() || !user) return;
-    // Standardize to lowercase for better matching logic
     await PantryService.addIngredient(user.uid, newItem.trim().toLowerCase());
     setNewItem("");
   };
@@ -71,7 +86,14 @@ export default function Home() {
     await PantryService.removeIngredient(user.uid, item);
   };
 
-  // NAVIGATION LOGIC: Show Details overlay if a recipe is selected
+  const handleAddLeftover = (item) => {
+    setLeftovers((prev) => [item, ...prev]);
+  };
+
+  const handleRemoveLeftover = (id) => {
+    setLeftovers((prev) => prev.filter((item) => item.id !== id));
+  };
+
   if (selectedRecipe) {
     return (
       <RecipeDetails
@@ -87,7 +109,7 @@ export default function Home() {
 
       <main className="flex-1 bg-[#f4f1ea] p-6 md:p-12 lg:p-16 w-full transition-all duration-500 min-h-screen">
         <div className="max-w-7xl mx-auto">
-          {/* HEADER */}
+          {/* HEADER SECTION */}
           <div className="flex flex-col lg:flex-row justify-between items-center gap-8 mb-12">
             <div className="w-full lg:w-auto text-center lg:text-left">
               <h1 className="text-4xl font-black text-gray-800 tracking-tight">
@@ -95,6 +117,7 @@ export default function Home() {
               </h1>
               <p className="text-gray-500 font-medium">Cooking made smarter.</p>
             </div>
+
             <div className="flex items-center gap-4 w-full lg:w-auto">
               <div className="relative group flex-1 lg:w-96">
                 <Search
@@ -111,9 +134,29 @@ export default function Home() {
                   size={20}
                 />
               </div>
-              <button className="p-4 bg-white rounded-2xl shadow-sm hover:bg-gray-50 border border-gray-50 transition-colors">
-                <Bell className="text-gray-700" size={24} />
+
+              {/* NOTIFICATION BELL */}
+              <button
+                onClick={() => setShowNotifs(!showNotifs)}
+                className={`relative p-4 bg-white rounded-2xl shadow-sm hover:bg-gray-50 border transition-all ${
+                  expiringItems.length > 0
+                    ? "border-orange-200"
+                    : "border-gray-50"
+                }`}
+              >
+                <Bell
+                  className={
+                    expiringItems.length > 0
+                      ? "text-orange-500 animate-pulse"
+                      : "text-gray-700"
+                  }
+                  size={24}
+                />
+                {expiringItems.length > 0 && (
+                  <span className="absolute top-3 right-3 w-3 h-3 bg-red-500 border-2 border-white rounded-full" />
+                )}
               </button>
+
               <button
                 onClick={() => navigate("/profile")}
                 className="p-4 bg-white rounded-2xl shadow-sm hover:bg-gray-50 border border-gray-50 transition-colors"
@@ -123,7 +166,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* HERO */}
+          {/* HERO SECTION */}
           <section className="relative overflow-hidden bg-green-900 rounded-[3.5rem] p-10 md:p-16 text-white mb-16 shadow-2xl">
             <div className="relative z-10 max-w-2xl">
               <span className="bg-green-700/50 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 inline-block">
@@ -142,56 +185,118 @@ export default function Home() {
             </div>
           </section>
 
-          {/* PANTRY SECTION */}
-          <section className="bg-white border border-gray-100 rounded-[2.5rem] p-6 mb-16 shadow-sm">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="font-black text-gray-800 mr-4">Your Pantry:</div>
-
-              {pantry.length === 0 ? (
-                <span className="text-gray-400 text-sm italic">
-                  Pantry is empty
-                </span>
-              ) : (
-                pantry.map((item) => (
-                  <span
-                    key={item}
-                    className="bg-[#fcfaf7] px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-600 flex items-center gap-3 border border-gray-50 hover:border-red-100 transition-all group"
+          {/* PANTRY & LEFTOVERS GRID */}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-16">
+            {/* Standard Pantry */}
+            <section className="xl:col-span-2 bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-black text-gray-800 text-xl">My Pantry</h3>
+                <form
+                  onSubmit={handleAddIngredient}
+                  className="flex items-center gap-2"
+                >
+                  <input
+                    type="text"
+                    placeholder="Add ingredient..."
+                    value={newItem}
+                    onChange={(e) => setNewItem(e.target.value)}
+                    className="bg-gray-50 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-green-600 outline-none w-40"
+                  />
+                  <button
+                    type="submit"
+                    className="bg-green-600 text-white p-2.5 rounded-xl hover:bg-green-700 transition-all"
                   >
-                    {item}
-                    <X
-                      size={14}
-                      className="cursor-pointer text-gray-300 group-hover:text-red-500 transition-colors"
-                      onClick={() => handleRemoveIngredient(item)}
-                    />
-                  </span>
-                ))
-              )}
+                    <Plus size={18} />
+                  </button>
+                </form>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {pantry.length === 0 ? (
+                  <p className="text-gray-400 italic text-sm">
+                    Pantry is empty
+                  </p>
+                ) : (
+                  pantry.map((item) => (
+                    <span
+                      key={item}
+                      className="bg-gray-50 px-5 py-2.5 rounded-2xl text-sm font-bold text-gray-600 flex items-center gap-3 border border-gray-100 group"
+                    >
+                      {item}
+                      <X
+                        size={14}
+                        className="cursor-pointer text-gray-300 group-hover:text-red-500 transition-colors"
+                        onClick={() => handleRemoveIngredient(item)}
+                      />
+                    </span>
+                  ))
+                )}
+              </div>
+            </section>
 
-              <form
-                onSubmit={handleAddIngredient}
-                className="flex items-center gap-2 ml-auto"
-              >
-                <input
-                  type="text"
-                  placeholder="Add to pantry..."
-                  value={newItem}
-                  onChange={(e) => setNewItem(e.target.value)}
-                  className="bg-gray-50 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-green-600 outline-none w-40"
-                />
+            {/* Leftovers Tracker */}
+            <section className="bg-orange-50/50 border border-orange-100 rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between mb-6 relative z-10">
+                <h3 className="font-black text-orange-900 text-xl">
+                  Leftovers
+                </h3>
                 <button
-                  type="submit"
-                  className="flex items-center gap-2 bg-green-50 text-green-600 font-black text-sm px-4 py-2.5 rounded-xl hover:bg-green-600 hover:text-white transition-all"
+                  onClick={() => setIsLeftoverModalOpen(true)}
+                  className="bg-orange-500 text-white p-2.5 rounded-xl hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20"
                 >
                   <Plus size={18} />
                 </button>
-              </form>
-            </div>
-          </section>
+              </div>
+              <div className="space-y-3 relative z-10">
+                {leftovers.length === 0 ? (
+                  <p className="text-orange-300 italic text-sm">
+                    No leftovers logged
+                  </p>
+                ) : (
+                  leftovers.map((item) => (
+                    <div
+                      key={item.id}
+                      className="bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm border border-orange-100 group"
+                    >
+                      <div>
+                        <p className="font-black text-gray-800 text-sm">
+                          {item.name}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <Clock
+                            size={12}
+                            className={
+                              item.daysLeft === 1
+                                ? "text-red-500"
+                                : "text-gray-400"
+                            }
+                          />
+                          <span
+                            className={`text-[10px] font-bold ${item.daysLeft === 1 ? "text-red-500" : "text-gray-400"}`}
+                          >
+                            {item.daysLeft}{" "}
+                            {item.daysLeft === 1 ? "day" : "days"} left
+                          </span>
+                        </div>
+                      </div>
+                      <X
+                        size={14}
+                        className="cursor-pointer text-gray-300 hover:text-red-500"
+                        onClick={() => handleRemoveLeftover(item.id)}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="absolute right-[-10%] top-[-10%] text-8xl opacity-5 pointer-events-none">
+                🥗
+              </div>
+            </section>
+          </div>
 
-          {/* INTEGRATED RECOMMENDED RECIPES SECTION */}
+          {/* RECOMMENDED RECIPES */}
           <RecommendedRecipe
             recipes={recipes}
-            pantry={pantry}
+            pantry={[...pantry, ...leftovers.map((l) => l.name)]}
             loading={loading}
             onRecipeClick={(recipe) => setSelectedRecipe(recipe)}
           />
@@ -199,6 +304,21 @@ export default function Home() {
           <About />
         </div>
       </main>
+
+      {/* OVERLAYS & MODALS */}
+      {showNotifs && (
+        <NotificationDisplay
+          items={expiringItems}
+          onClose={() => setShowNotifs(false)}
+        />
+      )}
+
+      <AddLeftoverModal
+        isOpen={isLeftoverModalOpen}
+        onClose={() => setIsLeftoverModalOpen(false)}
+        onAdd={handleAddLeftover}
+      />
+
       <ChatAssistant />
     </div>
   );
