@@ -1,6 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { PlusCircle, Utensils, Users, LogOut, ArrowLeft } from "lucide-react";
+import {
+  PlusCircle,
+  Utensils,
+  Users,
+  LogOut,
+  ArrowLeft,
+  ShoppingBag,
+} from "lucide-react";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -19,9 +26,9 @@ export default function AdminDashboard() {
       color: "bg-blue-600",
     },
     {
-      title: "User Analytics",
-      icon: <Users size={32} />,
-      path: "#",
+      title: "Add shop",
+      icon: <ShoppingBag size={32} />,
+      path: "/AdminAddShop",
       color: "bg-purple-600",
     },
   ];

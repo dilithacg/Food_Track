@@ -6,9 +6,15 @@ import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AddRecipe from "./pages/admin/AddRecipe";
 import { AuthProvider } from "./context/AuthContext";
-import ProtectedRoute from "./components/ProtectedRoute";
-import AdminRoute from "./components/AdminRoute";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import AdminRoute from "./routes/AdminRoute";
 import RecipeList from "./pages/RecipeList";
+// 1. Import the Shop Dashboard
+import ShopDashboard from "./pages/shop/ShopDashboard";
+import UserRequest from "./pages/UserRequest";
+import MyOrders from "./pages/MyOrders";
+import Analysis from "./pages/Analysis";
+import AdminAddShop from "./pages/admin/AdminAddShop";
 
 function App() {
   return (
@@ -37,6 +43,22 @@ function App() {
             }
           />
           <Route path="/all-recipes" element={<RecipeList />} />
+          <Route
+            path="/my-orders"
+            element={
+              <ProtectedRoute>
+                <MyOrders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analysis"
+            element={
+              <ProtectedRoute>
+                <Analysis />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Admin Protected routes */}
           <Route
@@ -53,6 +75,36 @@ function App() {
               <AdminRoute>
                 <AddRecipe />
               </AdminRoute>
+            }
+          />
+          <Route
+            path="/AdminAddShop"
+            element={
+              <AdminRoute>
+                <AdminAddShop />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/request-process"
+            element={
+              <ProtectedRoute>
+                <UserRequest />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 2. Shop Protected Route */}
+          <Route
+            path="/shop-dashboard"
+            element={
+              <ProtectedRoute>
+                {/* 
+                   Note: Use ProtectedRoute for now, or create a ShopRoute.js 
+                   to ensure ONLY users with role === 'shop' can enter.
+                */}
+                <ShopDashboard />
+              </ProtectedRoute>
             }
           />
 

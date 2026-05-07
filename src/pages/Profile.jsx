@@ -1,164 +1,105 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { auth, db } from "../firebase";
+import { doc, onSnapshot } from "firebase/firestore";
+import { signOut } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 import {
-  Settings,
-  Edit3,
-  Award,
-  Bookmark,
-  History,
-  PieChart,
-  ChevronRight,
+  User,
+  Mail,
+  Gem,
   LogOut,
-  Shield,
+  ChevronRight,
+  ShieldCheck,
+  Settings,
   Bell,
-  ChefHat,
+  ArrowLeft,
 } from "lucide-react";
-import Navbar from "../components/Navbar";
 
 export default function Profile() {
-  const STATS = [
-    {
-      label: "Cooked",
-      value: "24",
-      icon: <ChefHat size={20} />,
-      color: "bg-orange-100 text-orange-600",
-    },
-    {
-      label: "Saved",
-      value: "128",
-      icon: <Bookmark size={20} />,
-      color: "bg-blue-100 text-blue-600",
-    },
-    {
-      label: "Points",
-      size: 20,
-      value: "1.2k",
-      icon: <Award size={20} />,
-      color: "bg-yellow-100 text-yellow-600",
-    },
-  ];
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const MENU_ITEMS = [
-    {
-      title: "Cooking History",
-      icon: <History size={20} />,
-      subtitle: "Review your past meals",
-    },
-    {
-      title: "Dietary Preferences",
-      icon: <PieChart size={20} />,
-      subtitle: "Vegan, Keto, Allergies",
-    },
-    {
-      title: "Notifications",
-      icon: <Bell size={20} />,
-      subtitle: "Daily reminders & alerts",
-    },
-    {
-      title: "Privacy & Security",
-      icon: <Shield size={20} />,
-      subtitle: "Manage your data",
-    },
-  ];
+  useEffect(() => {
+    if (!auth.currentUser) {
+      navigate("/login");
+      return;
+    }
+
+    // Real-time listener for user data (especially for gem updates)
+    const unsubscribe = onSnapshot(
+      doc(db, "users", auth.currentUser.uid),
+      (doc) => {
+        if (doc.exists()) {
+          setUserData(doc.data());
+        }
+        setLoading(false);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#f4f1ea] flex font-sans antialiased overflow-x-hidden">
-      <Navbar />
-
-      <main className="flex-1 p-6 md:p-12 lg:p-16">
-        <div className="max-w-4xl mx-auto">
-          {/* HEADER */}
-          <div className="flex justify-between items-center mb-10">
-            <h1 className="text-3xl font-black text-gray-800 tracking-tight">
-              My Profile
-            </h1>
-            <button className="p-3 bg-white rounded-2xl shadow-sm hover:bg-gray-50 border border-gray-100 transition-all">
-              <Settings className="text-gray-600" size={22} />
-            </button>
+    <div className="min-h-screen bg-[#F8F9FD] pb-24">
+      <div className="max-w-2xl mx-auto p-6 mt-4">
+        {/* Profile Card */}
+        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 mb-6 flex flex-col items-center text-center">
+          <div className="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mb-4 border-4 border-white shadow-md">
+            <User size={48} className="text-orange-500" />
           </div>
-
-          {/* USER CARD */}
-          <section className="bg-white rounded-[3.5rem] p-8 md:p-12 shadow-sm border border-gray-100 mb-10 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8">
-              <button className="flex items-center gap-2 text-green-600 font-bold text-sm bg-green-50 px-4 py-2 rounded-xl hover:bg-green-100 transition-colors">
-                <Edit3 size={16} /> Edit
-              </button>
-            </div>
-
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              {/* Avatar with Ring */}
-              <div className="relative">
-                <div className="w-32 h-32 rounded-[2.5rem] bg-green-900 flex items-center justify-center text-5xl border-4 border-white shadow-xl">
-                  👨‍🍳
-                </div>
-                <div className="absolute -bottom-2 -right-2 bg-yellow-400 p-2 rounded-lg border-4 border-white shadow-lg">
-                  <Award size={20} className="text-white" />
-                </div>
-              </div>
-
-              <div className="text-center md:text-left">
-                <h2 className="text-3xl font-black text-gray-800 mb-1">
-                  Alex Thompson
-                </h2>
-                <p className="text-gray-400 font-medium mb-6">
-                  Master Home Chef • Member since 2024
-                </p>
-
-                <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                  {STATS.map((stat, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-3 bg-[#fcfaf7] px-5 py-3 rounded-2xl border border-gray-50"
-                    >
-                      <div className={`p-2 rounded-xl ${stat.color}`}>
-                        {stat.icon}
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black text-gray-400 uppercase leading-none">
-                          {stat.label}
-                        </p>
-                        <p className="text-lg font-black text-gray-800">
-                          {stat.value}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* SETTINGS MENU */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            {MENU_ITEMS.map((item, i) => (
-              <button
-                key={i}
-                className="flex items-center justify-between p-6 bg-white rounded-[2.5rem] border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group text-left"
-              >
-                <div className="flex items-center gap-5">
-                  <div className="p-4 bg-[#fcfaf7] rounded-2xl text-gray-400 group-hover:text-green-600 group-hover:bg-green-50 transition-colors">
-                    {item.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-800">{item.title}</h3>
-                    <p className="text-xs text-gray-400 font-medium">
-                      {item.subtitle}
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight
-                  className="text-gray-300 group-hover:text-green-600 transition-colors"
-                  size={20}
-                />
-              </button>
-            ))}
+          <h2 className="text-2xl font-black text-gray-900">
+            {userData?.fullName || "Re-Food User"}
+          </h2>
+          <div className="flex items-center gap-2 text-gray-400 font-bold text-sm mt-1">
+            <Mail size={14} />
+            <span>{auth.currentUser?.email}</span>
           </div>
-
-          {/* LOGOUT */}
-          <button className="w-full flex items-center justify-center gap-3 p-6 text-red-500 font-black hover:bg-red-50 rounded-[2.5rem] transition-colors border-2 border-dashed border-red-100">
-            <LogOut size={20} /> Log Out Account
-          </button>
+          <div className="mt-4 flex items-center gap-2 bg-green-50 text-green-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
+            <ShieldCheck size={12} /> Verified Account
+          </div>
         </div>
-      </main>
+
+        {/* Gems Balance Card */}
+        <div className="bg-gray-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden mb-8 shadow-xl shadow-blue-100">
+          <div className="absolute -right-4 -top-4 opacity-10">
+            <Gem size={150} />
+          </div>
+
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-blue-500/20 p-2 rounded-xl">
+                <Gem size={20} className="text-blue-400" />
+              </div>
+              <p className="text-blue-300 font-black text-xs uppercase tracking-[0.2em]">
+                Available Gems
+              </p>
+            </div>
+
+            <div className="flex items-end gap-3">
+              <h3 className="text-5xl font-black">{userData?.gems || 0}</h3>
+              <p className="text-blue-400 font-bold mb-2">RE-GEMS</p>
+            </div>
+
+            <p className="text-white/40 text-[10px] mt-6 font-medium leading-relaxed max-w-[200px]">
+              Use your gems to get discounts on your next food recycling order.
+            </p>
+          </div>
+        </div>
+
+        {/* Footer Credit */}
+        <p className="text-center text-gray-300 font-bold text-[10px] uppercase tracking-widest mt-12">
+          Re-Food Ecosystem v1.0.4
+        </p>
+      </div>
     </div>
   );
 }

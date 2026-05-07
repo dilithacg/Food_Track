@@ -27,6 +27,8 @@ export default function Login() {
 
       if (userDoc.exists() && userDoc.data().role === "admin") {
         navigate("/admin"); // Redirect Admins here
+      } else if (userDoc.data().role === "shop") {
+        navigate("/shop-dashboard");
       } else {
         navigate("/home"); // Redirect regular users here
       }

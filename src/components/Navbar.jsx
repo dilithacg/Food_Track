@@ -9,6 +9,9 @@ import {
   Utensils,
   ChevronRight,
   Info,
+  ShoppingBag,
+  ListOrderedIcon,
+  ChartBar,
 } from "lucide-react";
 import { AuthService } from "../api/authService";
 
@@ -74,22 +77,22 @@ export default function Navbar() {
               active={location.pathname === "/home"}
             />
             <NavItem
-              icon={<Info size={22} />}
-              label="About"
-              to="/about"
-              active={location.pathname === "/about"}
+              icon={<ChartBar size={22} />}
+              label="Analysis"
+              to="/analysis"
+              active={location.pathname === "/analysis"}
             />
             <NavItem
-              icon={<Search size={22} />}
-              label="Discover"
-              to="/discover"
-              active={location.pathname === "/discover"}
+              icon={<ListOrderedIcon size={22} />}
+              label="My Orders"
+              to="/my-orders"
+              active={location.pathname === "/my-orders"}
             />
             <NavItem
-              icon={<Heart size={22} />}
-              label="Favorites"
-              to="/favorites"
-              active={location.pathname === "/favorites"}
+              icon={<ShoppingBag size={22} />}
+              label="Request Process"
+              to="/request-process"
+              active={location.pathname === "/request-process"}
             />
             <NavItem
               icon={<User size={22} />}
