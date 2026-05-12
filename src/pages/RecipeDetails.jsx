@@ -1,19 +1,28 @@
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, Clock, Flame, Star, Utensils, Heart } from "lucide-react";
+import {
+  ChevronLeft,
+  Clock,
+  Flame,
+  Star,
+  Utensils,
+  Heart,
+  Loader2,
+} from "lucide-react";
 import CookingMode from "../components/CookingMode";
 import { db, auth } from "../firebase";
 import { doc, setDoc, deleteDoc, onSnapshot } from "firebase/firestore";
+import { PantryService } from "../api/pantryService";
 
 export default function RecipeDetails({ recipe, onBack }) {
   const [isCooking, setIsCooking] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
+  const [isDeducting, setIsDeducting] = useState(false); // Pantry update
 
   // 1. Check if this recipe is already in favorites
   useEffect(() => {
     if (!recipe || !auth.currentUser) return;
 
-    // We create a unique ID based on UserID + RecipeTitle/ID
     const favId = `${auth.currentUser.uid}_${recipe.id || recipe.title.replace(/\s+/g, "")}`;
     const favRef = doc(db, "favorites", favId);
 
@@ -48,6 +57,37 @@ export default function RecipeDetails({ recipe, onBack }) {
       console.error("Error toggling favorite:", error);
     } finally {
       setFavLoading(false);
+    }
+  };
+
+  // --- 3. START COOKING & DEDUCT PANTRY LOGIC ---
+  const handleStartCooking = async () => {
+    if (!auth.currentUser) {
+      alert("Please login to start cooking!");
+      return;
+    }
+
+    setIsDeducting(true);
+
+    try {
+      const success = await PantryService.deductIngredients(
+        auth.currentUser.uid,
+        recipe.ingredients,
+      );
+
+      if (success) {
+        setIsCooking(true);
+      } else {
+        alert(
+          "Pantry update failed. You can still cook, but quantities won't be updated.",
+        );
+        setIsCooking(true);
+      }
+    } catch (error) {
+      console.error("Cooking start error:", error);
+      setIsCooking(true);
+    } finally {
+      setIsDeducting(false);
     }
   };
 
@@ -143,10 +183,17 @@ export default function RecipeDetails({ recipe, onBack }) {
             </div>
 
             <button
-              onClick={() => setIsCooking(true)}
-              className="w-full mt-12 bg-green-800 text-white py-5 rounded-3xl font-black text-xl shadow-xl shadow-green-900/20 hover:bg-green-900 active:scale-[0.98] transition-all"
+              onClick={handleStartCooking}
+              disabled={isDeducting}
+              className="w-full mt-12 bg-green-800 text-white py-5 rounded-3xl font-black text-xl shadow-xl shadow-green-900/20 hover:bg-green-900 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
             >
-              Start Cooking Now
+              {isDeducting ? (
+                <>
+                  <Loader2 className="animate-spin" /> Updating Pantry...
+                </>
+              ) : (
+                "Start Cooking Now"
+              )}
             </button>
           </div>
         </div>

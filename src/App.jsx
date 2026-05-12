@@ -15,6 +15,8 @@ import UserRequest from "./pages/UserRequest";
 import MyOrders from "./pages/MyOrders";
 import Analysis from "./pages/Analysis";
 import AdminAddShop from "./pages/admin/AdminAddShop";
+import FavoriteList from "./pages/FavoriteList";
+import FoodScanner from "./pages/FoodScanner";
 
 function App() {
   return (
@@ -90,6 +92,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <UserRequest />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/favorite-list"
+            element={
+              <ProtectedRoute>
+                <FavoriteList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/food-scanner"
+            element={
+              <ProtectedRoute>
+                <FoodScanner />
               </ProtectedRoute>
             }
           />

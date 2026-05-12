@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RecipeService } from "../api/recipeService";
 import RecipeCard from "../components/RecipeCard";
-import RecipeDetails from "./RecipeDetails"; // Import the Details component
+import RecipeDetails from "./RecipeDetails";
 import Navbar from "../components/Navbar";
 import { ArrowLeft, Search, Loader2, Utensils } from "lucide-react";
 

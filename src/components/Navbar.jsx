@@ -12,6 +12,9 @@ import {
   ShoppingBag,
   ListOrderedIcon,
   ChartBar,
+  Scan,
+  LucideListOrdered,
+  ShoppingCart,
 } from "lucide-react";
 import { AuthService } from "../api/authService";
 
@@ -84,6 +87,18 @@ export default function Navbar() {
             />
             <NavItem
               icon={<ListOrderedIcon size={22} />}
+              label="Recipe List"
+              to="/all-recipes"
+              active={location.pathname === "/all-recipes"}
+            />
+            <NavItem
+              icon={<Scan size={22} />}
+              label="Food Scanner"
+              to="/food-scanner"
+              active={location.pathname === "/food-scanner"}
+            />
+            <NavItem
+              icon={<ShoppingCart size={22} />}
               label="My Orders"
               to="/my-orders"
               active={location.pathname === "/my-orders"}

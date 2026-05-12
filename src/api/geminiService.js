@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const API_KEY = "AIzaSyCt6PqsRU1oKh57GYTiTw7SXLKIfJ-ziT8";
+const API_KEY = "AIzaSyDqUZlzQpuP2ixWUzbdDYEoIaM2YRZu03A";
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 export const ChatService = {
@@ -20,6 +20,42 @@ export const ChatService = {
     } catch (error) {
       console.error("Gemini Error:", error);
       throw error; // Let the UI handle the error state
+    }
+  },
+
+  // --- 2. IMAGE ANALYSIS LOGIC (Merged) ---
+  async analyzeFoodImage(imageFile) {
+    try {
+      // 1.5-flash is optimized for multimodal (image + text) tasks
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+      // Convert image file to base64 for the API
+      const base64Image = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(imageFile);
+      });
+      const prompt = `Identify the food and provide ONLY these details in this exact format:
+- Calories: [number only]
+- Rating: [Good/Medium/Bad]
+- Ingredients: [list main ingredients]
+- Tip: [one short waste-prevention tip]`;
+
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            data: base64Image,
+            mimeType: imageFile.type,
+          },
+        },
+        prompt,
+      ]);
+
+      return result.response.text();
+    } catch (error) {
+      console.error("Image Analysis Error:", error);
+      throw error;
     }
   },
 };
