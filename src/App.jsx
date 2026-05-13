@@ -17,6 +17,7 @@ import Analysis from "./pages/Analysis";
 import AdminAddShop from "./pages/admin/AdminAddShop";
 import FavoriteList from "./pages/FavoriteList";
 import FoodScanner from "./pages/FoodScanner";
+import SmartRecipe from "./pages/SmartRecipe";
 
 function App() {
   return (
@@ -108,6 +109,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <FoodScanner />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/smart-recipe"
+            element={
+              <ProtectedRoute>
+                <SmartRecipe />
               </ProtectedRoute>
             }
           />

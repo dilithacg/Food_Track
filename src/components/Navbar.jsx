@@ -115,6 +115,12 @@ export default function Navbar() {
               to="/profile"
               active={location.pathname === "/profile"}
             />
+            <NavItem
+              icon={<User size={22} />}
+              label="Smart Recipe"
+              to="/smart-recipe"
+              active={location.pathname === "/smart-recipe"}
+            />
           </div>
         </div>
 
